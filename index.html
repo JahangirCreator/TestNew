@@ -32,45 +32,42 @@
 <body>
 
     <div class="container">
-        <h1>Дашборд агентства (Автозагрузка)</h1>
+        <h1>Дашборд агентства</h1>
         
-        <div id="loading-message" class="loading">Загрузка данных... ⏳</div>
-
+        <div id="loading-message" class="loading">Загрузка свежих данных... ⏳</div>
         <canvas id="myChart" style="display: none;"></canvas>
     </div>
 
     <script>
         let myChart = null;
 
-        // Как только страница открылась, запускаем эту функцию
         window.onload = function() {
-            // Указываем сайту, какой файл нужно скачать
-           fetch('data.xlsx?v=' + new Date().getTime())
+            // Добавляем текущую дату и время к ссылке на файл. 
+            // Теперь браузер и Vercel будут думать, что это каждый раз новый файл, и не будут его кэшировать!
+            let cacheBuster = 'data.xlsx?v=' + new Date().getTime();
+
+            fetch(cacheBuster)
                 .then(response => {
                     if (!response.ok) throw new Error("Файл data.xlsx не найден!");
                     return response.arrayBuffer();
                 })
                 .then(data => {
-                    // Читаем Excel файл
                     let workbook = XLSX.read(data, {type: 'array'});
                     let firstSheetName = workbook.SheetNames[0];
                     let worksheet = workbook.Sheets[firstSheetName];
                     let jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
 
-                    // Прячем надпись "Загрузка" и показываем график
                     document.getElementById('loading-message').style.display = 'none';
                     document.getElementById('myChart').style.display = 'block';
 
-                    // Строим график
                     createChart(jsonData);
                 })
                 .catch(error => {
-                    document.getElementById('loading-message').innerHTML = '❌ Ошибка: Убедитесь, что файл data.xlsx загружен на GitHub.';
+                    document.getElementById('loading-message').innerHTML = '❌ Ошибка: Загрузите файл data.xlsx на GitHub.';
                     console.error(error);
                 });
         };
 
-        // Функция создания графика (такая же, как раньше)
         function createChart(data) {
             let headers = data[0];
             let rows = data.slice(1);
@@ -104,4 +101,3 @@
     </script>
 </body>
 </html>
-''
