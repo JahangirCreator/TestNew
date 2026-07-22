@@ -3,15 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аналитика агентства (Облачная БД)</title>
+    <title>Онлайн-дашборд курсов валют</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; color: #333; padding: 20px; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            padding: 20px; 
+            margin: 0; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
         h1 { margin-top: 0; color: #1a73e8; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
         .loading { text-align: center; font-size: 18px; color: #666; margin: 40px 0; }
         canvas { margin-top: 20px; max-height: 400px; }
     </style>
@@ -19,41 +32,43 @@
 <body>
 
     <div class="container">
-        <h1>Дашборд с онлайн-базой данных</h1>
-        <div id="loading-message" class="loading">Подключение к облаку... ⏳</div>
+        <h1>Живые котировки валют</h1>
+        <div class="subtitle">Данные загружаются в реальном времени с финансового сервера 🌍</div>
+        
+        <div id="loading-message" class="loading">Запрос актуальных котировок... ⏳</div>
         <canvas id="myChart" style="display: none;"></canvas>
     </div>
 
     <script>
-        // Вставьте сюда ваши данные из настроек Supabase (Settings -> API)
-        const SUPABASE_URL = 'https://iroruckvegjbtujaamku.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyb3J1Y2t2ZWdqYnR1amFhbWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MTMxNTEsImV4cCI6MjEwMDI4OTE1MX0.YcVlpNtK3w2VWG9JGz0EJuDUQ86Js2hIXbejQcDr9Vc';
-
-        // Инициализируем подключение
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let myChart = null;
 
-        async function loadDataFromCloud() {
+        async function fetchLiveData() {
             try {
-                // Запрашиваем данные из нашей таблицы 'campaigns'
-                let { data, error } = await supabaseClient
-                    .from('Test campaign')
-                    .select('*');
+                // Обращаемся к бесплатному открытому финансовому API курсов валют относительно USD
+                let response = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (!response.ok) throw new Error('Ошибка соединения с сервером данных');
+                
+                let result = await response.json();
+                
+                // Выбираем несколько популярных валют для нашего графика
+                let rates = result.rates;
+                let labels = ['EUR (Евро)', 'GBP (Фунт)', 'JPY (Йена)', 'CAD (Канадский доллар)', 'AUD (Австралийский доллар)'];
+                let values = [
+                    rates.EUR,
+                    rates.GBP,
+                    rates.JPY,
+                    rates.CAD,
+                    rates.AUD
+                ];
 
-                if (error) throw error;
-
-                // Преобразуем данные из базы в массивы для графиков
-                let labels = data.map(item => item.name);
-                let values = data.map(item => item.value);
-
+                // Убираем надпись загрузки и показываем график
                 document.getElementById('loading-message').style.display = 'none';
                 document.getElementById('myChart').style.display = 'block';
 
                 createChart(labels, values);
 
             } catch (error) {
-                document.getElementById('loading-message').innerHTML = '❌ Ошибка подключения к базе данных.';
+                document.getElementById('loading-message').innerHTML = '❌ Не удалось получить данные из сети.';
                 console.error(error);
             }
         }
@@ -63,27 +78,29 @@
             if (myChart) myChart.destroy();
 
             myChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'bar', // Тип графика: столбики
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Показатели из облачной БД',
+                        label: 'Стоимость за 1 USD',
                         data: values,
-                        backgroundColor: 'rgba(52, 168, 83, 0.6)', // Зеленый цвет для облака
-                        borderColor: 'rgba(52, 168, 83, 1)',
+                        backgroundColor: 'rgba(255, 112, 67, 0.7)', // Красивый коралловый цвет
+                        borderColor: 'rgba(255, 112, 67, 1)',
                         borderWidth: 1,
-                        borderRadius: 4
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    scales: { y: { beginAtZero: true } }
+                    scales: { 
+                        y: { beginAtZero: false } // Шкала отсчета подстраивается под котировки
+                    }
                 }
             });
         }
 
-        // Запускаем загрузку при открытии страницы
-        loadDataFromCloud();
+        // Запускаем загрузку данных при открытии страницы
+        fetchLiveData();
     </script>
 </body>
 </html>
