@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Онлайн-дашборд курсов валют</title>
+    <title>Прогноз погоды - Онлайн Дашборд</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -23,7 +23,7 @@
             border-radius: 12px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
         }
-        h1 { margin-top: 0; color: #1a73e8; }
+        h1 { margin-top: 0; color: #0288d1; }
         .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
         .loading { text-align: center; font-size: 18px; color: #666; margin: 40px 0; }
         canvas { margin-top: 20px; max-height: 400px; }
@@ -32,43 +32,37 @@
 <body>
 
     <div class="container">
-        <h1>Живые котировки валют</h1>
-        <div class="subtitle">Данные загружаются в реальном времени с финансового сервера 🌍</div>
+        <h1>Прогноз погоды (Москва)</h1>
+        <div class="subtitle">График максимальной температуры на ближайшие дни 🌤️</div>
         
-        <div id="loading-message" class="loading">Запрос актуальных котировок... ⏳</div>
+        <div id="loading-message" class="loading">Загружаем прогноз погоды... ⏳</div>
         <canvas id="myChart" style="display: none;"></canvas>
     </div>
 
     <script>
         let myChart = null;
 
-        async function fetchLiveData() {
+        async function fetchWeather() {
             try {
-                // Обращаемся к бесплатному открытому финансовому API курсов валют относительно USD
-                let response = await fetch('https://open.er-api.com/v6/latest/USD');
-                if (!response.ok) throw new Error('Ошибка соединения с сервером данных');
+                // Запрашиваем данные о погоде через бесплатный открытый API Open-Meteo
+                // Координаты Москвы: широта 55.7558, долгота 37.6173
+                let response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.7558&longitude=37.6173&daily=temperature_2m_max&timezone=auto');
+                if (!response.ok) throw new Error('Ошибка получения данных о погоде');
                 
-                let result = await response.json();
+                let data = await response.json();
                 
-                // Выбираем несколько популярных валют для нашего графика
-                let rates = result.rates;
-                let labels = ['EUR (Евро)', 'GBP (Фунт)', 'JPY (Йена)', 'CAD (Канадский доллар)', 'AUD (Австралийский доллар)'];
-                let values = [
-                    rates.EUR,
-                    rates.GBP,
-                    rates.JPY,
-                    rates.CAD,
-                    rates.AUD
-                ];
+                // Получаем список дат и максимальных температур
+                let labels = data.daily.time; // Даты (например, "2026-06-06")
+                let values = data.daily.temperature_2m_max; // Градусы Цельсия
 
-                // Убираем надпись загрузки и показываем график
+                // Убираем анимацию загрузки и показываем график
                 document.getElementById('loading-message').style.display = 'none';
                 document.getElementById('myChart').style.display = 'block';
 
                 createChart(labels, values);
 
             } catch (error) {
-                document.getElementById('loading-message').innerHTML = '❌ Не удалось получить данные из сети.';
+                document.getElementById('loading-message').innerHTML = '❌ Не удалось загрузить погоду.';
                 console.error(error);
             }
         }
@@ -78,29 +72,30 @@
             if (myChart) myChart.destroy();
 
             myChart = new Chart(ctx, {
-                type: 'bar', // Тип графика: столбики
+                type: 'line', // Используем плавный линейный график, идеально для погоды
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Стоимость за 1 USD',
+                        label: 'Максимальная температура (°C)',
                         data: values,
-                        backgroundColor: 'rgba(255, 112, 67, 0.7)', // Красивый коралловый цвет
-                        borderColor: 'rgba(255, 112, 67, 1)',
-                        borderWidth: 1,
-                        borderRadius: 6
+                        backgroundColor: 'rgba(2, 136, 209, 0.2)',
+                        borderColor: 'rgba(2, 136, 209, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4 // Плавные изгибы линии
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: { 
-                        y: { beginAtZero: false } // Шкала отсчета подстраивается под котировки
+                        y: { beginAtZero: false } 
                     }
                 }
             });
         }
 
-        // Запускаем загрузку данных при открытии страницы
-        fetchLiveData();
+        // Запускаем загрузку прогноза при открытии страницы
+        fetchWeather();
     </script>
 </body>
 </html>
