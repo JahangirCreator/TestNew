@@ -3,27 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аналитика Рекламного Агентства</title>
+    <title>Аналитика агентства (Облачная БД)</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f0f2f5; 
-            color: #333;
-            padding: 20px; 
-            margin: 0;
-        }
-        .container { 
-            max-width: 800px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; color: #333; padding: 20px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h1 { margin-top: 0; color: #1a73e8; }
         .loading { text-align: center; font-size: 18px; color: #666; margin: 40px 0; }
         canvas { margin-top: 20px; max-height: 400px; }
@@ -32,51 +19,47 @@
 <body>
 
     <div class="container">
-        <h1>Дашборд агентства</h1>
-        
-        <div id="loading-message" class="loading">Загрузка свежих данных... ⏳</div>
+        <h1>Дашборд с онлайн-базой данных</h1>
+        <div id="loading-message" class="loading">Подключение к облаку... ⏳</div>
         <canvas id="myChart" style="display: none;"></canvas>
     </div>
 
     <script>
+        // Вставьте сюда ваши данные из настроек Supabase (Settings -> API)
+        const SUPABASE_URL = 'https://iroruckvegjbtujaamku.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyb3J1Y2t2ZWdqYnR1amFhbWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MTMxNTEsImV4cCI6MjEwMDI4OTE1MX0.YcVlpNtK3w2VWG9JGz0EJuDUQ86Js2hIXbejQcDr9Vc';
+
+        // Инициализируем подключение
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let myChart = null;
 
-        window.onload = function() {
-            // Добавляем текущую дату и время к ссылке на файл. 
-            // Теперь браузер и Vercel будут думать, что это каждый раз новый файл, и не будут его кэшировать!
-            let cacheBuster = 'data.xlsx?v=' + new Date().getTime();
+        async function loadDataFromCloud() {
+            try {
+                // Запрашиваем данные из нашей таблицы 'campaigns'
+                let { data, error } = await supabaseClient
+                    .from('campaigns')
+                    .select('*');
 
-            fetch(cacheBuster)
-                .then(response => {
-                    if (!response.ok) throw new Error("Файл data.xlsx не найден!");
-                    return response.arrayBuffer();
-                })
-                .then(data => {
-                    let workbook = XLSX.read(data, {type: 'array'});
-                    let firstSheetName = workbook.SheetNames[0];
-                    let worksheet = workbook.Sheets[firstSheetName];
-                    let jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                if (error) throw error;
 
-                    document.getElementById('loading-message').style.display = 'none';
-                    document.getElementById('myChart').style.display = 'block';
+                // Преобразуем данные из базы в массивы для графиков
+                let labels = data.map(item => item.name);
+                let values = data.map(item => item.value);
 
-                    createChart(jsonData);
-                })
-                .catch(error => {
-                    document.getElementById('loading-message').innerHTML = '❌ Ошибка: Загрузите файл data.xlsx на GitHub.';
-                    console.error(error);
-                });
-        };
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('myChart').style.display = 'block';
 
-        function createChart(data) {
-            let headers = data[0];
-            let rows = data.slice(1);
+                createChart(labels, values);
 
-            let labels = rows.map(row => row[0]).filter(val => val !== undefined);
-            let values = rows.map(row => row[1]).filter(val => val !== undefined);
+            } catch (error) {
+                document.getElementById('loading-message').innerHTML = '❌ Ошибка подключения к базе данных.';
+                console.error(error);
+            }
+        }
 
+        function createChart(labels, values) {
             let ctx = document.getElementById('myChart').getContext('2d');
-
             if (myChart) myChart.destroy();
 
             myChart = new Chart(ctx, {
@@ -84,10 +67,10 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: headers[1] || 'Показатели',
+                        label: 'Показатели из облачной БД',
                         data: values,
-                        backgroundColor: 'rgba(26, 115, 232, 0.6)',
-                        borderColor: 'rgba(26, 115, 232, 1)',
+                        backgroundColor: 'rgba(52, 168, 83, 0.6)', // Зеленый цвет для облака
+                        borderColor: 'rgba(52, 168, 83, 1)',
                         borderWidth: 1,
                         borderRadius: 4
                     }]
@@ -98,6 +81,9 @@
                 }
             });
         }
+
+        // Запускаем загрузку при открытии страницы
+        loadDataFromCloud();
     </script>
 </body>
 </html>
