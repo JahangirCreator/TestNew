@@ -38,7 +38,7 @@
             try {
                 // Запрашиваем данные из нашей таблицы 'campaigns'
                 let { data, error } = await supabaseClient
-                    .from('campaigns')
+                    .from('Test campaign')
                     .select('*');
 
                 if (error) throw error;
