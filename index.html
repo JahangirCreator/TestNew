@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Нефтяной Дашборд - Цены и Динамика</title>
+    <title>Нефтяной Дашборд - Таблицы и Графики</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         body { 
@@ -28,6 +30,7 @@
             width: 100%;
             overflow-x: auto;
             margin-top: 15px;
+            margin-bottom: 30px;
         }
         table { 
             width: 100%; 
@@ -55,13 +58,37 @@
         }
         .positive { color: #276749; background-color: #f0fff4; font-weight: bold; }
         .negative { color: #9b2c2c; background-color: #fff5f5; font-weight: bold; }
+
+        /* Контейнеры для графиков */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .chart-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .chart-card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #2d3748;
+            text-align: center;
+        }
+        canvas {
+            max-height: 350px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>📊 Мониторинг нефтяного рынка</h1>
-        <p style="color: #666; font-size: 14px;">Оперативные данные стоимости марок нефти и расчет суточной динамики.</p>
+        <h1>📊 Аналитический дашборд нефтяного рынка</h1>
+        <p style="color: #666; font-size: 14px;">Комплексный мониторинг стоимости марок нефти, суточной динамики и визуализация на диаграммах.</p>
 
         <h2>1. Oil brand cost, USD (Ежедневная стоимость)</h2>
         <div class="table-responsive">
@@ -72,10 +99,22 @@
         <div class="table-responsive">
             <table id="dynamicTable"></table>
         </div>
+
+        <h2>📈 Графическая визуализация</h2>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Динамика цен марок нефти (USD)</h3>
+                <canvas id="costChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Суточное изменение цен (Daily Dynamic)</h3>
+                <canvas id="dynamicChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Даты за июль из вашей таблицы (с 1 по 23 число)
+        // Даты за июль
         const dates = [
             '2026-07-01', '2026-07-02', '2026-07-03', '2026-07-04', '2026-07-05', 
             '2026-07-06', '2026-07-07', '2026-07-08', '2026-07-09', '2026-07-10', 
@@ -84,7 +123,7 @@
             '2026-07-21', '2026-07-22', '2026-07-23'
         ];
 
-        // Данные по маркам (согласно вашему файлу заполнены первые дни, остальные пустые)
+        // Данные (пример из вашего файла)
         const rawData = {
             "Brent":       [1.0, 2.0, 1.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
             "WTI":         [1.0, 3.0, 2.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -93,7 +132,7 @@
         };
 
         function renderDashboard() {
-            // --- РЕНДЕР ТАБЛИЦЫ 1 (Цены) ---
+            // --- 1. РЕНДЕР ТАБЛИЦЫ ЦЕН ---
             let costHtml = `<thead><tr><th>Марка нефти</th>`;
             dates.forEach(date => costHtml += `<th>${date}</th>`);
             costHtml += `</tr></thead><tbody>`;
@@ -108,7 +147,8 @@
             costHtml += `</tbody>`;
             document.getElementById('costTable').innerHTML = costHtml;
 
-            // --- РЕНДЕР ТАБЛИЦЫ 2 (Динамика: Сегодня - Вчера) ---
+            // --- 2. РЕНДЕР ТАБЛИЦЫ ДИНАМИКИ И РАСЧЕТ МАССИВОВ ---
+            let dynamicData = {};
             let dynamicHtml = `<thead><tr><th>Марка нефти</th>`;
             dates.forEach(date => dynamicHtml += `<th>${date}</th>`);
             dynamicHtml += `</tr></thead><tbody>`;
@@ -116,12 +156,15 @@
             for (let brand in rawData) {
                 dynamicHtml += `<tr><td class="brand-name">${brand}</td>`;
                 let prices = rawData[brand];
+                dynamicData[brand] = [];
                 
                 prices.forEach((val, index) => {
                     if (index === 0 || val === null || prices[index - 1] === null) {
                         dynamicHtml += `<td>-</td>`;
+                        dynamicData[brand].push(null);
                     } else {
                         let diff = val - prices[index - 1];
+                        dynamicData[brand].push(diff);
                         let formattedDiff = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
                         let cssClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : '');
                         dynamicHtml += `<td class="${cssClass}">${formattedDiff}</td>`;
@@ -131,6 +174,58 @@
             }
             dynamicHtml += `</tbody>`;
             document.getElementById('dynamicTable').innerHTML = dynamicHtml;
+
+            // --- 3. ПОСТРОЕНИЕ ДИАГРАММ ---
+            renderCharts(rawData, dynamicData);
+        }
+
+        function renderCharts(cost, dynamic) {
+            // Цвета для разных марок нефти
+            const colors = {
+                "Brent": "#2b6cb0",
+                "WTI": "#319795",
+                "Dubai Crude": "#d69e2e",
+                "Urals": "#e53e3e"
+            };
+
+            // График 1: Цены (Линейный)
+            let costDatasets = [];
+            for (let brand in cost) {
+                costDatasets.push({
+                    label: brand,
+                    data: cost[brand],
+                    borderColor: colors[brand],
+                    backgroundColor: colors[brand],
+                    borderWidth: 2,
+                    tension: 0.1,
+                    spanGaps: true
+                });
+            }
+
+            let ctxCost = document.getElementById('costChart').getContext('2d');
+            new Chart(ctxCost, {
+                type: 'line',
+                data: { labels: dates, datasets: costDatasets },
+                options: { responsive: true, scales: { y: { beginAtZero: false } } }
+            });
+
+            // График 2: Суточная динамика (Столбики)
+            let dynamicDatasets = [];
+            for (let brand in dynamic) {
+                dynamicDatasets.push({
+                    label: brand,
+                    data: dynamic[brand],
+                    backgroundColor: colors[brand],
+                    borderWidth: 1
+                });
+            }
+
+            let ctxDynamic = document.getElementById('dynamicChart').getContext('2d');
+            new Chart(ctxDynamic, {
+                type: 'bar',
+                data: { labels: dates, datasets: dynamicDatasets },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
         }
 
         renderDashboard();
