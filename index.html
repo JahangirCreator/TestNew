@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивный дашборд нефти</title>
+    <title>Мультифункциональный финансовый дашборд</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -26,162 +26,142 @@
         h1 { margin-top: 0; color: #1a365d; font-size: 24px; }
         .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
 
-        /* Стили для кнопок-переключателей */
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .nav-btn {
-            background-color: #e2e8f0;
-            color: #4a5568;
-            border: none;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 600;
+        /* Стили для выпадающего фильтра */
+        .filter-container { 
+            margin-bottom: 30px; 
+            background: #f8fafc;
+            padding: 20px;
             border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        label { 
+            font-weight: 600; 
+            color: #2d3748; 
+            display: block; 
+            margin-bottom: 8px; 
+            font-size: 14px;
+        }
+        select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            font-size: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #cbd5e0; 
+            background-color: #fff; 
+            color: #2d3748;
             cursor: pointer;
-            transition: all 0.3s ease;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        .nav-btn:hover {
-            background-color: #cbd5e0;
-        }
-        .nav-btn.active {
-            background-color: #2b6cb0;
-            color: white;
-            box-shadow: 0 4px 10px rgba(43, 108, 176, 0.3);
+        select:focus {
+            border-color: #2b6cb0;
         }
 
-        /* Контейнеры для графиков */
-        .chart-container {
-            display: none; /* По умолчанию скрыты */
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        /* Контейнер графика */
+        .chart-card { 
+            background: #ffffff; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            padding: 20px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
         }
-        .chart-container.active {
-            display: block; /* Показываем активный график */
-        }
-        .chart-container h3 {
-            margin-top: 0;
-            font-size: 18px;
-            color: #2d3748;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        canvas {
-            max-height: 400px;
+        canvas { 
+            max-height: 400px; 
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🛢️ Аналитический терминал нефтяного рынка</h1>
-        <div class="subtitle">Выберите нужный срез данных с помощью кнопок управления ниже:</div>
+        <h1>🌐 Мультифинансовый терминал данных</h1>
+        <div class="subtitle">Выберите категорию активов из фильтра для мониторинга суточной динамики в реальном времени:</div>
 
-        <div class="nav-buttons">
-            <button class="nav-btn active" id="btn-cost" onclick="switchTab('cost')">1. Динамика стоимости марок нефти</button>
-            <button class="nav-btn" id="btn-dynamic" onclick="switchTab('dynamic')">2. Суточное изменение цен</button>
+        <div class="filter-container">
+            <label for="categoryFilter">🎛️ Фильтр категорий активов:</label>
+            <select id="categoryFilter" onchange="updateChartCategory()">
+                <option value="oil">Стоимость нефти по маркам (Суточное изменение)</option>
+                <option value="metals">Стоимость драг. металлов (Золото, Серебро, Платина)</option>
+                <option value="currencies">Курсы валют по отношению к USD (Евро, Аз. манат, Тур. лира)</option>
+            </select>
         </div>
 
-        <div class="chart-container active" id="tab-cost">
-            <h3>📈 Динамика стоимости марок нефти (USD)</h3>
-            <canvas id="costChart"></canvas>
-        </div>
-
-        <div class="chart-container" id="tab-dynamic">
-            <h3>📊 Суточное изменение цен (Daily Dynamic)</h3>
+        <div class="chart-card">
             <canvas id="dynamicChart"></canvas>
         </div>
     </div>
 
     <script>
-        // Исходные данные для демонстрации
+        // Общая шкала дат
         const dates = ['19 июля', '20 июля', '21 июля', '22 июля', '23 июля'];
-        
-        const marketData = {
-            "Brent": [84.20, 84.90, 85.10, 84.60, 85.35],
-            "WTI":   [80.50, 81.10, 81.40, 80.90, 81.70],
-            "Dubai": [78.90, 79.40, 79.80, 79.20, 80.05],
-            "Urals": [73.50, 74.00, 74.20, 73.80, 74.60]
+
+        // Базы данных для каждой категории
+        const categoriesData = {
+            // 1. Нефть
+            oil: {
+                datasets: [
+                    { label: 'Brent', data: [0.70, 0.20, -0.50, 0.75, 0.40], borderColor: '#2b6cb0', backgroundColor: '#2b6cb0', borderWidth: 2, tension: 0.2 },
+                    { label: 'WTI', data: [0.60, 0.30, -0.50, 0.80, 0.35], borderColor: '#319795', backgroundColor: '#319795', borderWidth: 2, tension: 0.2 },
+                    { label: 'Dubai Crude', data: [0.50, 0.40, -0.60, 0.85, 0.45], borderColor: '#d69e2e', backgroundColor: '#d69e2e', borderWidth: 2, tension: 0.2 },
+                    { label: 'Urals', data: [0.50, 0.20, -0.40, 0.80, 0.30], borderColor: '#e53e3e', backgroundColor: '#e53e3e', borderWidth: 2, tension: 0.2 }
+                ]
+            },
+            // 2. Драгоценные металлы
+            metals: {
+                datasets: [
+                    { label: 'Золото (Gold)', data: [12.5, -4.2, 8.1, 15.3, -2.0], borderColor: '#d69e2e', backgroundColor: '#d69e2e', borderWidth: 2, tension: 0.2 },
+                    { label: 'Серебро (Silver)', data: [0.45, -0.12, 0.30, 0.65, -0.05], borderColor: '#718096', backgroundColor: '#718096', borderWidth: 2, tension: 0.2 },
+                    { label: 'Платина (Platinum)', data: [5.2, 1.8, -3.1, 4.4, 2.1], borderColor: '#3182ce', backgroundColor: '#3182ce', borderWidth: 2, tension: 0.2 }
+                ]
+            },
+            // 3. Курсы валют
+            currencies: {
+                datasets: [
+                    { label: 'EUR (Евро)', data: [0.003, -0.001, 0.002, -0.004, 0.001], borderColor: '#3182ce', backgroundColor: '#3182ce', borderWidth: 2, tension: 0.2 },
+                    { label: 'AZN (Азербайджанский манат)', data: [0.000, 0.000, 0.000, 0.000, 0.000], borderColor: '#38a169', backgroundColor: '#38a169', borderWidth: 2, tension: 0.2 },
+                    { label: 'TRY (Турецкая лира)', data: [-0.15, -0.20, -0.08, -0.25, -0.10], borderColor: '#e53e3e', backgroundColor: '#e53e3e', borderWidth: 2, tension: 0.2 }
+                ]
+            }
         };
 
-        const dynamicData = {
-            "Brent": [0, 0.70, 0.20, -0.50, 0.75],
-            "WTI":   [0, 0.60, 0.30, -0.50, 0.80],
-            "Dubai": [0, 0.50, 0.40, -0.60, 0.85],
-            "Urals": [0, 0.50, 0.20, -0.40, 0.80]
-        };
+        let currentChart = null;
 
-        const colors = {
-            "Brent": "#2b6cb0",
-            "WTI": "#319795",
-            "Dubai": "#d69e2e",
-            "Urals": "#e53e3e"
-        };
+        // Функция обновления графика при переключении фильтра
+        function updateChartCategory() {
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            const categoryInfo = categoriesData[selectedCategory];
 
-        // Функция переключения вкладок
-        function switchTab(tabName) {
-            // Убираем класс active у всех кнопок и вкладок
-            document.getElementById('btn-cost').classList.remove('active');
-            document.getElementById('btn-dynamic').classList.remove('active');
-            document.getElementById('tab-cost').classList.remove('active');
-            document.getElementById('tab-dynamic').classList.remove('active');
+            const ctx = document.getElementById('dynamicChart').getContext('2d');
 
-            // Включаем нужную кнопку и вкладку
-            if (tabName === 'cost') {
-                document.getElementById('btn-cost').classList.add('active');
-                document.getElementById('tab-cost').classList.add('active');
-            } else {
-                document.getElementById('btn-dynamic').classList.add('active');
-                document.getElementById('tab-dynamic').classList.add('active');
-            }
-        }
-
-        // Инициализация графиков при загрузке страницы
-        function initCharts() {
-            // 1. Линейный график стоимости
-            let costDatasets = [];
-            for (let brand in marketData) {
-                costDatasets.push({
-                    label: brand,
-                    data: marketData[brand],
-                    borderColor: colors[brand],
-                    backgroundColor: colors[brand],
-                    borderWidth: 2,
-                    tension: 0.2
-                });
+            // Если график уже существует, уничтожаем его перед созданием нового
+            if (currentChart) {
+                currentChart.destroy();
             }
 
-            new Chart(document.getElementById('costChart').getContext('2d'), {
-                type: 'line',
-                data: { labels: dates, datasets: costDatasets },
-                options: { responsive: true, scales: { y: { beginAtZero: false } } }
-            });
-
-            // 2. Столбиковый график суточной динамики
-            let dynamicDatasets = [];
-            for (let brand in dynamicData) {
-                dynamicDatasets.push({
-                    label: brand,
-                    data: dynamicData[brand],
-                    backgroundColor: colors[brand],
-                    borderWidth: 1
-                });
-            }
-
-            new Chart(document.getElementById('dynamicChart').getContext('2d'), {
-                type: 'bar',
-                data: { labels: dates, datasets: dynamicDatasets },
-                options: { responsive: true, scales: { y: { beginAtZero: false } } }
+            // Создаем новый график под выбранную категорию
+            currentChart = new Chart(ctx, {
+                type: 'line', // Линейный график динамики
+                data: {
+                    labels: dates,
+                    datasets: categoryInfo.datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
             });
         }
 
-        // Запускаем построение графиков
-        initCharts();
+        // Автоматически запускаем отображение первой категории при открытии страницы
+        updateChartCategory();
     </script>
 </body>
 </html>
