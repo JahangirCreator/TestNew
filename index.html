@@ -22,7 +22,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
         }
         h1 { margin-top: 0; color: #1a365d; font-size: 24px; }
-        h2 { color: #2b6cb0; font-size: 18px; margin-top: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        h2 { color: #2b6cb0; font-size: 18px; margin-top: 35px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
         
         .table-responsive {
             width: 100%;
@@ -38,7 +38,7 @@
         }
         th, td { 
             padding: 10px 12px; 
-            border: 1px solid #e2e8f0; 
+            border: 1px solid #cbd5e0; 
         }
         th { 
             background-color: #2b6cb0; 
@@ -53,32 +53,29 @@
             font-weight: bold;
             background-color: #edf2f7;
         }
-        .positive { color: #38a169; font-weight: bold; }
-        .negative { color: #e53e3e; font-weight: bold; }
+        .positive { color: #276749; background-color: #f0fff4; font-weight: bold; }
+        .negative { color: #9b2c2c; background-color: #fff5f5; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>📊 Нефтяной рынок: Аналитический дашборд</h1>
-        <p style="color: #666; font-size: 14px;">Данные мониторинга марок нефти за июль 2026 года в онлайн-режиме.</p>
+        <h1>📊 Мониторинг нефтяного рынка</h1>
+        <p style="color: #666; font-size: 14px;">Оперативные данные стоимости марок нефти и расчет суточной динамики.</p>
 
         <h2>1. Oil brand cost, USD (Ежедневная стоимость)</h2>
         <div class="table-responsive">
-            <table id="costTable">
-                </table>
+            <table id="costTable"></table>
         </div>
 
-        <h2>2. Oil brand cost, daily dynamic (Изменение к предыдущему дню)</h2>
+        <h2>2. Oil brand cost, daily dynamic (Динамика изменения)</h2>
         <div class="table-responsive">
-            <table id="dynamicTable">
-                </table>
+            <table id="dynamicTable"></table>
         </div>
     </div>
 
     <script>
-        // Исходные данные по дням июля (пример цифр на основе вашей структуры)
-        // Даты от 2026-07-01 до 2026-07-23
+        // Даты за июль из вашей таблицы (с 1 по 23 число)
         const dates = [
             '2026-07-01', '2026-07-02', '2026-07-03', '2026-07-04', '2026-07-05', 
             '2026-07-06', '2026-07-07', '2026-07-08', '2026-07-09', '2026-07-10', 
@@ -87,16 +84,16 @@
             '2026-07-21', '2026-07-22', '2026-07-23'
         ];
 
-        // Цены марок по дням (null означает, что данных за этот день еще нет)
+        // Данные по маркам (согласно вашему файлу заполнены первые дни, остальные пустые)
         const rawData = {
-            "Brent":      [85.2, 85.8, 84.9, 85.1, 85.5, 86.2, 85.9, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            "WTI":        [81.5, 82.0, 81.2, 81.6, 81.9, 82.5, 82.1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            "Dubai Crude":[79.8, 80.3, 79.5, 79.9, 80.2, 80.8, 80.4, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            "Urals":      [74.1, 74.6, 73.9, 74.2, 74.5, 75.1, 74.8, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
+            "Brent":       [1.0, 2.0, 1.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "WTI":         [1.0, 3.0, 2.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "Dubai Crude": [2.0, 4.0, 1.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            "Urals":       [1.0, 1.0, 1.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
         };
 
-        function renderTables() {
-            // --- РЕНДЕР ТАБЛИЦЫ 1 (Стоимость) ---
+        function renderDashboard() {
+            // --- РЕНДЕР ТАБЛИЦЫ 1 (Цены) ---
             let costHtml = `<thead><tr><th>Марка нефти</th>`;
             dates.forEach(date => costHtml += `<th>${date}</th>`);
             costHtml += `</tr></thead><tbody>`;
@@ -111,7 +108,6 @@
             costHtml += `</tbody>`;
             document.getElementById('costTable').innerHTML = costHtml;
 
-
             // --- РЕНДЕР ТАБЛИЦЫ 2 (Динамика: Сегодня - Вчера) ---
             let dynamicHtml = `<thead><tr><th>Марка нефти</th>`;
             dates.forEach(date => dynamicHtml += `<th>${date}</th>`);
@@ -123,7 +119,7 @@
                 
                 prices.forEach((val, index) => {
                     if (index === 0 || val === null || prices[index - 1] === null) {
-                        dynamicHtml += `<td>-</td>`; // Для первого дня нет предыдущего
+                        dynamicHtml += `<td>-</td>`;
                     } else {
                         let diff = val - prices[index - 1];
                         let formattedDiff = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
@@ -137,8 +133,7 @@
             document.getElementById('dynamicTable').innerHTML = dynamicHtml;
         }
 
-        // Запускаем отрисовку таблиц при загрузке
-        renderTables();
+        renderDashboard();
     </script>
 </body>
 </html>
