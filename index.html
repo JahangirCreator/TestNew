@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мультифункциональный финансовый дашборд</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Корпоративный Дашборд Посещаемости (API Simulation)</title>
     
     <style>
         body { 
@@ -16,7 +14,7 @@
             margin: 0; 
         }
         .container { 
-            max-width: 1000px; 
+            max-width: 1250px; 
             margin: 0 auto; 
             background: white; 
             padding: 30px; 
@@ -26,142 +24,197 @@
         h1 { margin-top: 0; color: #1a365d; font-size: 24px; }
         .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
 
-        /* Стили для выпадающего фильтра */
-        .filter-container { 
-            margin-bottom: 30px; 
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+        /* Панель фильтров и поиска */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-        label { 
-            font-weight: 600; 
-            color: #2d3748; 
-            display: block; 
-            margin-bottom: 8px; 
+        .search-box, .filter-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
             font-size: 14px;
-        }
-        select { 
-            width: 100%; 
-            padding: 12px 15px; 
-            font-size: 15px; 
-            border-radius: 8px; 
-            border: 1px solid #cbd5e0; 
-            background-color: #fff; 
-            color: #2d3748;
-            cursor: pointer;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
             outline: none;
-            transition: border-color 0.3s;
+            background: #fff;
+            box-sizing: border-box;
         }
-        select:focus {
+        input:focus, select:focus {
             border-color: #2b6cb0;
         }
 
-        /* Контейнер графика */
-        .chart-card { 
-            background: #ffffff; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            padding: 20px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
+        /* Таблица */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
         }
-        canvas { 
-            max-height: 400px; 
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: left; 
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        th, td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #e2e8f0; 
+        }
+        th { 
+            background-color: #2b6cb0; 
+            color: white; 
+            font-weight: 600; 
+        }
+        tr:nth-child(even) { 
+            background-color: #f7fafc; 
+        }
+        tr:hover {
+            background-color: #edf2f7;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-face { background-color: #ebf8ff; color: #3182ce; }
+        .badge-finger { background-color: #f0fff4; color: #38a169; }
+        
+        .status-bar {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #718096;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🌐 Мультифинансовый терминал данных</h1>
-        <div class="subtitle">Выберите категорию активов из фильтра для мониторинга суточной динамики в реальном времени:</div>
+        <h1>🏢 WebOffice — Мониторинг проходов сотрудников</h1>
+        <div class="subtitle">Интерактивная панель отслеживания посещаемости офисов в режиме реального времени (Эмуляция API).</div>
 
-        <div class="filter-container">
-            <label for="categoryFilter">🎛️ Фильтр категорий активов:</label>
-            <select id="categoryFilter" onchange="updateChartCategory()">
-                <option value="oil">Стоимость нефти по маркам (Суточное изменение)</option>
-                <option value="metals">Стоимость драг. металлов (Золото, Серебро, Платина)</option>
-                <option value="currencies">Курсы валют по отношению к USD (Евро, Аз. манат, Тур. лира)</option>
-            </select>
+        <div class="controls">
+            <div class="search-box">
+                <label for="searchInput">🔍 Поиск по сотруднику:</label>
+                <input type="text" id="searchInput" placeholder="Введите имя или фамилию..." onkeyup="filterTable()">
+            </div>
+            <div class="filter-box">
+                <label for="companyFilter">🏢 Фильтр по компании:</label>
+                <select id="companyFilter" onchange="filterTable()">
+                    <option value="">Все компании</option>
+                    <option value="NETANT MMC">NETANT MMC</option>
+                    <option value="Mediaforce MMC">Mediaforce MMC</option>
+                    <option value="ADVERT MMC">ADVERT MMC</option>
+                    <option value="POSTER MMC">POSTER MMC</option>
+                    <option value="BANNER MMC">BANNER MMC</option>
+                    <option value="O.M.M. MMC">O.M.M. MMC</option>
+                </select>
+            </div>
         </div>
 
-        <div class="chart-card">
-            <canvas id="dynamicChart"></canvas>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Офис</th>
+                        <th>Время</th>
+                        <th>Работник</th>
+                        <th>Способ входа</th>
+                        <th>Дверь</th>
+                        <th>Число</th>
+                        <th>Компания</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="status-bar">
+            <span id="rowCount">Загрузка данных...</span>
+            <span>Статус API: <strong style="color: #38a169;">● Онлайн (Connected)</strong></span>
         </div>
     </div>
 
     <script>
-        // Общая шкала дат
-        const dates = ['19 июля', '20 июля', '21 июля', '22 июля', '23 июля'];
+        // Массив данных, смоделированный на основе структуры вашей выгрузки weboffice.xlsx
+        const logsData = [
+            { office: "MediaForce", time: "10:30:39", employee: "Cəmilə Mirzəyeva Müzəffər", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC" },
+            { office: "MediaForce", time: "10:29:50", employee: "Qahira Tarverdiyeva Tarverdiyeva", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC" },
+            { office: "SmartBEE", time: "10:28:21", employee: "Şəbnəm Xuraminacad Mirkazım", method: "👆 Fingerprint", door: "İkinci giriş", date: "2026-07-24", company: "NETANT MMC" },
+            { office: "MediaForce", time: "10:27:39", employee: "İrina Bernadina Vladimirovna", method: "👤 Face control", door: "Əsas çıxış", date: "2026-07-24", company: "NETANT MMC" },
+            { office: "MediaForce", time: "10:23:42", employee: "Tofiq Paşayev Fəxrəddin", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "O.M.M. MMC" },
+            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC" },
+            { office: "SmartBEE", time: "10:12:17", employee: "Ayaz Əşrəfov Ələkbər", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC" },
+            { office: "POSTER", time: "10:08:43", employee: "Nigar Məmmədova Rauf", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC" },
+            { office: "POSTER", time: "10:02:48", employee: "Nəzrin Abbaszadə Natiq", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC" },
+            { office: "MediaForce", time: "10:02:27", employee: "Məleykə Məmmədova Mehman", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC" },
+            { office: "Banner-2", time: "10:02:19", employee: "Afət Əliməmmədova Nurəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" },
+            { office: "Banner", time: "10:02:10", employee: "Nigar Həşimova Yaşar", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" },
+            { office: "Banner", time: "10:01:28", employee: "Ruqayyə İbrahimova Sədrəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" }
+        ];
 
-        // Базы данных для каждой категории
-        const categoriesData = {
-            // 1. Нефть
-            oil: {
-                datasets: [
-                    { label: 'Brent', data: [0.70, 0.20, -0.50, 0.75, 0.40], borderColor: '#2b6cb0', backgroundColor: '#2b6cb0', borderWidth: 2, tension: 0.2 },
-                    { label: 'WTI', data: [0.60, 0.30, -0.50, 0.80, 0.35], borderColor: '#319795', backgroundColor: '#319795', borderWidth: 2, tension: 0.2 },
-                    { label: 'Dubai Crude', data: [0.50, 0.40, -0.60, 0.85, 0.45], borderColor: '#d69e2e', backgroundColor: '#d69e2e', borderWidth: 2, tension: 0.2 },
-                    { label: 'Urals', data: [0.50, 0.20, -0.40, 0.80, 0.30], borderColor: '#e53e3e', backgroundColor: '#e53e3e', borderWidth: 2, tension: 0.2 }
-                ]
-            },
-            // 2. Драгоценные металлы
-            metals: {
-                datasets: [
-                    { label: 'Золото (Gold)', data: [12.5, -4.2, 8.1, 15.3, -2.0], borderColor: '#d69e2e', backgroundColor: '#d69e2e', borderWidth: 2, tension: 0.2 },
-                    { label: 'Серебро (Silver)', data: [0.45, -0.12, 0.30, 0.65, -0.05], borderColor: '#718096', backgroundColor: '#718096', borderWidth: 2, tension: 0.2 },
-                    { label: 'Платина (Platinum)', data: [5.2, 1.8, -3.1, 4.4, 2.1], borderColor: '#3182ce', backgroundColor: '#3182ce', borderWidth: 2, tension: 0.2 }
-                ]
-            },
-            // 3. Курсы валют
-            currencies: {
-                datasets: [
-                    { label: 'EUR (Евро)', data: [0.003, -0.001, 0.002, -0.004, 0.001], borderColor: '#3182ce', backgroundColor: '#3182ce', borderWidth: 2, tension: 0.2 },
-                    { label: 'AZN (Азербайджанский манат)', data: [0.000, 0.000, 0.000, 0.000, 0.000], borderColor: '#38a169', backgroundColor: '#38a169', borderWidth: 2, tension: 0.2 },
-                    { label: 'TRY (Турецкая лира)', data: [-0.15, -0.20, -0.08, -0.25, -0.10], borderColor: '#e53e3e', backgroundColor: '#e53e3e', borderWidth: 2, tension: 0.2 }
-                ]
-            }
-        };
+        // Функция отрисовки таблицы
+        function renderTable(data) {
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
 
-        let currentChart = null;
-
-        // Функция обновления графика при переключении фильтра
-        function updateChartCategory() {
-            const selectedCategory = document.getElementById('categoryFilter').value;
-            const categoryInfo = categoriesData[selectedCategory];
-
-            const ctx = document.getElementById('dynamicChart').getContext('2d');
-
-            // Если график уже существует, уничтожаем его перед созданием нового
-            if (currentChart) {
-                currentChart.destroy();
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #a0aec0; padding: 20px;">Записи не найдены</td></tr>`;
+                document.getElementById('rowCount').innerText = `Показано записей: 0`;
+                return;
             }
 
-            // Создаем новый график под выбранную категорию
-            currentChart = new Chart(ctx, {
-                type: 'line', // Линейный график динамики
-                data: {
-                    labels: dates,
-                    datasets: categoryInfo.datasets
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    }
-                }
+            data.forEach(item => {
+                let badgeClass = item.method.includes('Face') ? 'badge-face' : 'badge-finger';
+                let row = `<tr>
+                    <td><strong>${item.office}</strong></td>
+                    <td><span style="font-family: monospace; font-weight: bold; color: #2b6cb0;">${item.time}</span></td>
+                    <td>${item.employee}</td>
+                    <td><span class="badge ${badgeClass}">${item.method}</span></td>
+                    <td>${item.door}</td>
+                    <td>${item.date}</td>
+                    <td><span style="color: #4a5568; font-weight: 500;">${item.company}</span></td>
+                </tr>`;
+                tbody.innerHTML += row;
             });
+
+            document.getElementById('rowCount').innerText = `Показано записей: ${data.length}`;
         }
 
-        // Автоматически запускаем отображение первой категории при открытии страницы
-        updateChartCategory();
+        // Функция фильтрации (поиск + выбор компании)
+        function filterTable() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCompany = document.getElementById('companyFilter').value;
+
+            const filtered = logsData.filter(item => {
+                const matchesSearch = item.employee.toLowerCase().includes(searchText);
+                const matchesCompany = selectedCompany === "" || item.company === selectedCompany;
+                return matchesSearch && matchesCompany;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Первичная загрузка
+        renderTable(logsData);
     </script>
 </body>
 </html>
