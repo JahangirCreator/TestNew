@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Корпоративный Дашборд Посещаемости (API Simulation)</title>
+    <title>Корпоративный Дашборд Посещаемости</title>
     
     <style>
         body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background-color: #f4f6f9; 
-            color: #333; 
+            font-family: 'Aptos', 'Segoe UI', Tahoma, sans-serif; 
+            background-color: #594700; /* Темно-желтый / горчичный фон */
+            color: #2d3748; 
             padding: 20px; 
             margin: 0; 
         }
         .container { 
             max-width: 1250px; 
             margin: 0 auto; 
-            background: white; 
+            background: #fffdf5; /* Кремово-белый фон дашборда */
             padding: 30px; 
             border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
         }
-        h1 { margin-top: 0; color: #1a365d; font-size: 24px; }
-        .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
+        h1 { margin-top: 0; color: #4a3800; font-size: 24px; }
+        .subtitle { color: #705b00; font-size: 14px; margin-bottom: 25px; }
 
         /* Панель фильтров и поиска */
         .controls {
@@ -39,21 +39,22 @@
             display: block;
             font-weight: 600;
             font-size: 13px;
-            color: #4a5568;
+            color: #5c4700;
             margin-bottom: 5px;
         }
         input, select {
             width: 100%;
             padding: 10px 14px;
             font-size: 14px;
-            border: 1px solid #cbd5e0;
+            border: 1px solid #d4c37a;
             border-radius: 8px;
             outline: none;
             background: #fff;
             box-sizing: border-box;
+            font-family: 'Aptos', sans-serif;
         }
         input:focus, select:focus {
-            border-color: #2b6cb0;
+            border-color: #9c7c00;
         }
 
         /* Таблица */
@@ -61,7 +62,7 @@
             width: 100%;
             overflow-x: auto;
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e2dbb8;
         }
         table { 
             width: 100%; 
@@ -72,18 +73,18 @@
         }
         th, td { 
             padding: 12px 15px; 
-            border-bottom: 1px solid #e2e8f0; 
+            border-bottom: 1px solid #eef2f7; 
         }
         th { 
-            background-color: #2b6cb0; 
+            background-color: #735d00; /* Темно-желтый заголовок таблицы */
             color: white; 
             font-weight: 600; 
         }
         tr:nth-child(even) { 
-            background-color: #f7fafc; 
+            background-color: #faf8ed; 
         }
         tr:hover {
-            background-color: #edf2f7;
+            background-color: #f4efd6;
         }
         .badge {
             display: inline-block;
@@ -92,13 +93,42 @@
             font-size: 11px;
             font-weight: bold;
         }
-        .badge-face { background-color: #ebf8ff; color: #3182ce; }
+        .badge-face { background-color: #e6fffa; color: #319795; }
         .badge-finger { background-color: #f0fff4; color: #38a169; }
-        
+
+        /* Стильные логотипы компаний */
+        .company-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        /* Уникальные цвета для логотипов компаний */
+        .logo-netant { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .logo-mediaforce { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+        .logo-advert { background: linear-gradient(135deg, #eb3349, #f45c43); }
+        .logo-poster { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .logo-banner { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+        .logo-omm { background: linear-gradient(135deg, #833ab4, #fd1d1d); }
+        .logo-smartbee { background: linear-gradient(135deg, #f7b733, #fc4a1a); }
+
         .status-bar {
             margin-top: 15px;
             font-size: 13px;
-            color: #718096;
+            color: #705b00;
             display: flex;
             justify-content: space-between;
         }
@@ -108,7 +138,7 @@
 
     <div class="container">
         <h1>🏢 WebOffice — Мониторинг проходов сотрудников</h1>
-        <div class="subtitle">Интерактивная панель отслеживания посещаемости офисов в режиме реального времени (Эмуляция API).</div>
+        <div class="subtitle">Интерактивная панель отслеживания посещаемости с фирменными логотипами компаний.</div>
 
         <div class="controls">
             <div class="search-box">
@@ -125,6 +155,7 @@
                     <option value="POSTER MMC">POSTER MMC</option>
                     <option value="BANNER MMC">BANNER MMC</option>
                     <option value="O.M.M. MMC">O.M.M. MMC</option>
+                    <option value="SMARTBEE MMC">SMARTBEE MMC</option>
                 </select>
             </div>
         </div>
@@ -149,72 +180,15 @@
 
         <div class="status-bar">
             <span id="rowCount">Загрузка данных...</span>
-            <span>Статус API: <strong style="color: #38a169;">● Онлайн (Connected)</strong></span>
+            <span>Статус API: <strong style="color: #2f855a;">● Онлайн (Connected)</strong></span>
         </div>
     </div>
 
     <script>
-        // Массив данных, смоделированный на основе структуры вашей выгрузки weboffice.xlsx
         const logsData = [
-            { office: "MediaForce", time: "10:30:39", employee: "Cəmilə Mirzəyeva Müzəffər", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC" },
-            { office: "MediaForce", time: "10:29:50", employee: "Qahira Tarverdiyeva Tarverdiyeva", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC" },
-            { office: "SmartBEE", time: "10:28:21", employee: "Şəbnəm Xuraminacad Mirkazım", method: "👆 Fingerprint", door: "İkinci giriş", date: "2026-07-24", company: "NETANT MMC" },
-            { office: "MediaForce", time: "10:27:39", employee: "İrina Bernadina Vladimirovna", method: "👤 Face control", door: "Əsas çıxış", date: "2026-07-24", company: "NETANT MMC" },
-            { office: "MediaForce", time: "10:23:42", employee: "Tofiq Paşayev Fəxrəddin", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "O.M.M. MMC" },
-            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC" },
-            { office: "SmartBEE", time: "10:12:17", employee: "Ayaz Əşrəfov Ələkbər", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC" },
-            { office: "POSTER", time: "10:08:43", employee: "Nigar Məmmədova Rauf", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC" },
-            { office: "POSTER", time: "10:02:48", employee: "Nəzrin Abbaszadə Natiq", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC" },
-            { office: "MediaForce", time: "10:02:27", employee: "Məleykə Məmmədova Mehman", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC" },
-            { office: "Banner-2", time: "10:02:19", employee: "Afət Əliməmmədova Nurəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" },
-            { office: "Banner", time: "10:02:10", employee: "Nigar Həşimova Yaşar", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" },
-            { office: "Banner", time: "10:01:28", employee: "Ruqayyə İbrahimova Sədrəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC" }
-        ];
-
-        // Функция отрисовки таблицы
-        function renderTable(data) {
-            const tbody = document.getElementById('logTableBody');
-            tbody.innerHTML = '';
-
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #a0aec0; padding: 20px;">Записи не найдены</td></tr>`;
-                document.getElementById('rowCount').innerText = `Показано записей: 0`;
-                return;
-            }
-
-            data.forEach(item => {
-                let badgeClass = item.method.includes('Face') ? 'badge-face' : 'badge-finger';
-                let row = `<tr>
-                    <td><strong>${item.office}</strong></td>
-                    <td><span style="font-family: monospace; font-weight: bold; color: #2b6cb0;">${item.time}</span></td>
-                    <td>${item.employee}</td>
-                    <td><span class="badge ${badgeClass}">${item.method}</span></td>
-                    <td>${item.door}</td>
-                    <td>${item.date}</td>
-                    <td><span style="color: #4a5568; font-weight: 500;">${item.company}</span></td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-
-            document.getElementById('rowCount').innerText = `Показано записей: ${data.length}`;
-        }
-
-        // Функция фильтрации (поиск + выбор компании)
-        function filterTable() {
-            const searchText = document.getElementById('searchInput').value.toLowerCase();
-            const selectedCompany = document.getElementById('companyFilter').value;
-
-            const filtered = logsData.filter(item => {
-                const matchesSearch = item.employee.toLowerCase().includes(searchText);
-                const matchesCompany = selectedCompany === "" || item.company === selectedCompany;
-                return matchesSearch && matchesCompany;
-            });
-
-            renderTable(filtered);
-        }
-
-        // Первичная загрузка
-        renderTable(logsData);
-    </script>
-</body>
-</html>
+            { office: "MediaForce", time: "10:30:39", employee: "Cəmilə Mirzəyeva Müzəffər", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "MediaForce", time: "10:29:50", employee: "Qahira Tarverdiyeva Tarverdiyeva", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
+            { office: "SmartBEE", time: "10:28:21", employee: "Şəbnəm Xuraminacad Mirkazım", method: "👆 Fingerprint", door: "İkinci giriş", date: "2026-07-24", company: "SMARTBEE MMC", logoClass: "logo-smartbee", logoText: "SB" },
+            { office: "MediaForce", time: "10:27:39", employee: "İrina Bernadina Vladimirovna", method: "👤 Face control", door: "Əsas çıxış", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "MediaForce", time: "10:23:42", employee: "Tofiq Paşayev Fəxrəddin", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "O.M.M. MMC", logoClass: "logo-omm", logoText: "OM" },
+            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👤 Face control", door: "Əsas giriş", date: "202
