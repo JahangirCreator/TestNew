@@ -14,7 +14,7 @@
             margin: 0; 
         }
         .container { 
-            max-width: 1250px; 
+            max-width: 1300px; 
             margin: 0 auto; 
             background: #fffdf5; /* Кремово-белый фон дашборда */
             padding: 30px; 
@@ -80,12 +80,22 @@
             color: white; 
             font-weight: 600; 
         }
+        
+        /* Цвета строк и статусов */
         tr:nth-child(even) { 
             background-color: #faf8ed; 
         }
         tr:hover {
             background-color: #f4efd6;
         }
+        /* Подсветка опоздавших красным */
+        tr.late-row {
+            background-color: #ffe6e6 !important;
+        }
+        tr.late-row:hover {
+            background-color: #ffcccc !important;
+        }
+
         .badge {
             display: inline-block;
             padding: 4px 8px;
@@ -95,6 +105,17 @@
         }
         .badge-face { background-color: #e6fffa; color: #319795; }
         .badge-finger { background-color: #f0fff4; color: #38a169; }
+        
+        /* Статусы опоздания */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-ontime { background-color: #c6f6d5; color: #22543d; }
+        .status-late { background-color: #fed7d7; color: #9b2c2c; }
 
         /* Стильные логотипы компаний */
         .company-logo {
@@ -137,7 +158,7 @@
 
     <div class="container">
         <h1>🏢 WebOffice — Мониторинг проходов сотрудников</h1>
-        <div class="subtitle">Интерактивная панель отслеживания посещаемости с фирменными логотипами компаний.</div>
+        <div class="subtitle">Интерактивная панель отслеживания посещаемости с автоматическим контролем опозданий (лимит: 10:00:00).</div>
 
         <!-- Управление фильтрами -->
         <div class="controls">
@@ -167,6 +188,7 @@
                     <tr>
                         <th>Офис</th>
                         <th>Время</th>
+                        <th>Статус прихода</th>
                         <th>Работник</th>
                         <th>Способ входа</th>
                         <th>Дверь</th>
@@ -187,7 +209,6 @@
     </div>
 
     <script>
-        // Полный массив данных из вашей выгрузки weboffice.xlsx
         const logsData = [
             { office: "MediaForce", time: "10:30:39", employee: "Cəmilə Mirzəyeva Müzəffər", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
             { office: "MediaForce", time: "10:29:50", employee: "QAHİRƏ TARVERDİYEVA TARVERDİ", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
@@ -226,16 +247,24 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #a0aec0; padding: 20px;">Записи не найдены</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #a0aec0; padding: 20px;">Записи не найдены</td></tr>`;
                 document.getElementById('rowCount').innerText = `Показано записей: 0`;
                 return;
             }
 
             data.forEach(item => {
+                // Логика проверки опоздания (сравниваем время с "10:00:00")
+                let isLate = item.time > "10:00:00";
+                let statusText = isLate ? "Опоздал" : "Не опоздал";
+                let statusClass = isLate ? "status-late" : "status-ontime";
+                let rowClass = isLate ? "late-row" : "";
+
                 let badgeClass = item.method.includes('Face') ? 'badge-face' : 'badge-finger';
-                let row = `<tr>
+                
+                let row = `<tr class="${rowClass}">
                     <td><strong>${item.office}</strong></td>
                     <td><span style="font-family: monospace; font-weight: bold; color: #735d00;">${item.time}</span></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                     <td>${item.employee}</td>
                     <td><span class="badge ${badgeClass}">${item.method}</span></td>
                     <td>${item.door}</td>
@@ -266,7 +295,7 @@
             renderTable(filtered);
         }
 
-        // Запуск при загрузке страницы
+        // Первичная загрузка
         renderTable(logsData);
     </script>
 </body>
