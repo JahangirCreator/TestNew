@@ -116,7 +116,6 @@
             letter-spacing: 0.5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
         }
-        /* Уникальные цвета для логотипов компаний */
         .logo-netant { background: linear-gradient(135deg, #667eea, #764ba2); }
         .logo-mediaforce { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
         .logo-advert { background: linear-gradient(135deg, #eb3349, #f45c43); }
@@ -140,6 +139,7 @@
         <h1>🏢 WebOffice — Мониторинг проходов сотрудников</h1>
         <div class="subtitle">Интерактивная панель отслеживания посещаемости с фирменными логотипами компаний.</div>
 
+        <!-- Управление фильтрами -->
         <div class="controls">
             <div class="search-box">
                 <label for="searchInput">🔍 Поиск по сотруднику:</label>
@@ -160,6 +160,7 @@
             </div>
         </div>
 
+        <!-- Таблица данных -->
         <div class="table-responsive">
             <table>
                 <thead>
@@ -174,7 +175,8 @@
                     </tr>
                 </thead>
                 <tbody id="logTableBody">
-                    </tbody>
+                    <!-- Данные заполняются через JS -->
+                </tbody>
             </table>
         </div>
 
@@ -185,10 +187,87 @@
     </div>
 
     <script>
+        // Полный массив данных из вашей выгрузки weboffice.xlsx
         const logsData = [
             { office: "MediaForce", time: "10:30:39", employee: "Cəmilə Mirzəyeva Müzəffər", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
-            { office: "MediaForce", time: "10:29:50", employee: "Qahira Tarverdiyeva Tarverdiyeva", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
+            { office: "MediaForce", time: "10:29:50", employee: "QAHİRƏ TARVERDİYEVA TARVERDİ", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
             { office: "SmartBEE", time: "10:28:21", employee: "Şəbnəm Xuraminacad Mirkazım", method: "👆 Fingerprint", door: "İkinci giriş", date: "2026-07-24", company: "SMARTBEE MMC", logoClass: "logo-smartbee", logoText: "SB" },
-            { office: "MediaForce", time: "10:27:39", employee: "İrina Bernadina Vladimirovna", method: "👤 Face control", door: "Əsas çıxış", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
-            { office: "MediaForce", time: "10:23:42", employee: "Tofiq Paşayev Fəxrəddin", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "O.M.M. MMC", logoClass: "logo-omm", logoText: "OM" },
-            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👤 Face control", door: "Əsas giriş", date: "202
+            { office: "MediaForce", time: "10:27:39", employee: "İRİNA BERNADİNA VLADİMİROVNA", method: "👤 Face control", door: "Əsas çıxış", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "MediaForce", time: "10:23:42", employee: "TOFİQ PAŞAYEV FƏXRƏDDİN", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "O.M.M. MMC", logoClass: "logo-omm", logoText: "OM" },
+            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "MediaForce", time: "10:23:36", employee: "Fərid Çıraqov Eldar", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "SmartBEE", time: "10:21:17", employee: "EMİL ABBASOV ELÇİN", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "SMARTBEE MMC", logoClass: "logo-smartbee", logoText: "SB" },
+            { office: "MediaForce", time: "10:20:55", employee: "Aysel Xələfova Namiq", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC", logoClass: "logo-advert", logoText: "ADV" },
+            { office: "MediaForce", time: "10:17:27", employee: "Familə Məsimova Bəxtiyar", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
+            { office: "MediaForce", time: "10:17:01", employee: "Günel Ocaqverdiyeva İlqar", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "MediaForce", time: "10:16:56", employee: "Məryəm Cəfərova Rəfayıl", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
+            { office: "MediaForce", time: "10:15:30", employee: "Teymur Babazadə Faiq", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "Mediaforce MMC", logoClass: "logo-mediaforce", logoText: "MF" },
+            { office: "MediaForce", time: "10:13:26", employee: "Sibel Daşdəmirova Fuad", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC", logoClass: "logo-advert", logoText: "ADV" },
+            { office: "MediaForce", time: "10:12:39", employee: "Samirə Məmmədova Oqtay", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "NETANT MMC", logoClass: "logo-netant", logoText: "NT" },
+            { office: "SmartBEE", time: "10:12:17", employee: "Ayaz Əşrəfov Ələkbər", method: "👆 Fingerprint", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC", logoClass: "logo-advert", logoText: "ADV" },
+            { office: "POSTER", time: "10:08:43", employee: "Nigar Məmmədova Rauf", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC", logoClass: "logo-poster", logoText: "PST" },
+            { office: "POSTER", time: "10:02:48", employee: "Nəzrin Abbaszadə Natiq", method: "👤 Face control", door: "Giriş", date: "2026-07-24", company: "POSTER MMC", logoClass: "logo-poster", logoText: "PST" },
+            { office: "MediaForce", time: "10:02:27", employee: "Məleykə Məmmədova Mehman", method: "👤 Face control", door: "Əsas giriş", date: "2026-07-24", company: "ADVERT MMC", logoClass: "logo-advert", logoText: "ADV" },
+            { office: "Banner-2", time: "10:02:19", employee: "Afət Əliməmmədova Nurəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "10:02:10", employee: "Nigar Həşimova Yaşar", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "10:01:28", employee: "Ruqayyə İbrahimova Sədrəddin", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "09:59:43", employee: "Xəyalə Məmmədova Eldar", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "09:58:31", employee: "Günel Rzayeva Vaqif", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "09:56:52", employee: "Elçin Quliyev Məmməd", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "09:53:11", employee: "Zaur Əliyev Akif", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner-2", time: "09:50:19", employee: "Leyla Kərimova Natiq", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner-2", time: "09:48:05", employee: "Rəşad Məmmədov Tofiq", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner-2", time: "09:45:20", employee: "Aygün Qasımova Cəmil", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" },
+            { office: "Banner", time: "09:40:12", employee: "Kamran Həsənov Nizami", method: "👤 Face control", door: "-", date: "2026-07-24", company: "BANNER MMC", logoClass: "logo-banner", logoText: "BNR" }
+        ];
+
+        function renderTable(data) {
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #a0aec0; padding: 20px;">Записи не найдены</td></tr>`;
+                document.getElementById('rowCount').innerText = `Показано записей: 0`;
+                return;
+            }
+
+            data.forEach(item => {
+                let badgeClass = item.method.includes('Face') ? 'badge-face' : 'badge-finger';
+                let row = `<tr>
+                    <td><strong>${item.office}</strong></td>
+                    <td><span style="font-family: monospace; font-weight: bold; color: #735d00;">${item.time}</span></td>
+                    <td>${item.employee}</td>
+                    <td><span class="badge ${badgeClass}">${item.method}</span></td>
+                    <td>${item.door}</td>
+                    <td>${item.date}</td>
+                    <td>
+                        <div class="company-logo">
+                            <div class="logo-icon ${item.logoClass}">${item.logoText}</div>
+                            <span>${item.company}</span>
+                        </div>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('rowCount').innerText = `Показано записей: ${data.length}`;
+        }
+
+        function filterTable() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCompany = document.getElementById('companyFilter').value;
+
+            const filtered = logsData.filter(item => {
+                const matchesSearch = item.employee.toLowerCase().includes(searchText);
+                const matchesCompany = selectedCompany === "" || item.company === selectedCompany;
+                return matchesSearch && matchesCompany;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Запуск при загрузке страницы
+        renderTable(logsData);
+    </script>
+</body>
+</html>
