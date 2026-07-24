@@ -88,12 +88,19 @@
         tr:hover {
             background-color: #f4efd6;
         }
-        /* Подсветка опоздавших красным */
+
+        /* Эффект мигания (пульсации) красным цветом для опоздавших */
+        @keyframes blinkLate {
+            0% { background-color: #ffe6e6; }
+            50% { background-color: #ffb3b3; }
+            100% { background-color: #ffe6e6; }
+        }
         tr.late-row {
-            background-color: #ffe6e6 !important;
+            animation: blinkLate 1.8s infinite ease-in-out;
         }
         tr.late-row:hover {
-            background-color: #ffcccc !important;
+            animation: none; /* При наведении мигание останавливается для удобства чтения */
+            background-color: #ff9999 !important;
         }
 
         .badge {
@@ -253,7 +260,6 @@
             }
 
             data.forEach(item => {
-                // Логика проверки опоздания (сравниваем время с "10:00:00")
                 let isLate = item.time > "10:00:00";
                 let statusText = isLate ? "Опоздал" : "Не опоздал";
                 let statusClass = isLate ? "status-late" : "status-ontime";
